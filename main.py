@@ -129,7 +129,7 @@ def test(epoch):
     # Save checkpoint.
     acc = 100.*correct/total
     if acc > best_acc:
-        print('Saving..')
+        print('Saving..', acc)
         state = {
             'net': net.state_dict(),
             'acc': acc,
@@ -137,9 +137,8 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.t7')
+        torch.save(state, '../gdrive/My Drive/Colab Notebooks/ckpt.t7')
         best_acc = acc
-    print('best acc: ', best_acc)
 
 def predict():
     pass
