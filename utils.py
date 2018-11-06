@@ -43,7 +43,7 @@ def init_params(net):
                 init.constant(m.bias, 0)
 
 
-term_width = 70 #os.get_terminal_size().columns
+term_width = 90 #os.get_terminal_size().columns
 
 TOTAL_BAR_LENGTH = 65.
 last_time = time.time()
