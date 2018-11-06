@@ -129,7 +129,7 @@ def test(epoch):
     # Save checkpoint.
     acc = 100.*correct/total
     if acc > best_acc:
-        print('Saving..  ' + str(acc))
+        print('Saving..  %f', acc)
         state = {
             'net': net.state_dict(),
             'acc': acc,
@@ -141,9 +141,28 @@ def test(epoch):
         best_acc = acc
 
 def predict():
-    pass
+    testset = torchvision.datasets.ImageFolder(root='ts', transform=torchvision.transforms.ToTensor())
+    testloader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False, num_workers=2)
+    net.eval()
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            outputs = net(inputs)
+
+            _, predicted = outputs.max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+
 
 if __name__ == '__main__':
-    for epoch in range(start_epoch, start_epoch+200):
-        train(epoch)
-        test(epoch)
+
+
+
+    if args.predict:
+        predict()
+    else:
+        for epoch in range(start_epoch, start_epoch+200):
+            train(epoch)
+            test(epoch)
