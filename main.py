@@ -137,7 +137,7 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(state, '../gdrive/My Drive/Colab Notebooks/ckpt.t7')
+        torch.save(state, '/content/gdrive/My Drive/Colab Notebooks/ckpt.t7')
         best_acc = acc
 
 def predict():
