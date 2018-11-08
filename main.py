@@ -15,17 +15,23 @@ import argparse
 
 from models import *
 from utils import progress_bar
+from utils import ImageFolderWithPaths
+
+
+import sys
+sys.setrecursionlimit(100000)
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
+parser.add_argument('--predict', action='store_true', help='forward prop')
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
-batch_size = 24
+batch_size = 16
 
 # Data
 print('==> Preparing data..')
@@ -45,8 +51,8 @@ transform_test = transforms.Compose([
 trainset = torchvision.datasets.ImageFolder(root='tr', transform=torchvision.transforms.ToTensor())
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=2)
 
-testset = torchvision.datasets.ImageFolder(root='val', transform=torchvision.transforms.ToTensor())
-testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=2)
+valset = torchvision.datasets.ImageFolder(root='val', transform=torchvision.transforms.ToTensor())
+valloader = torch.utils.data.DataLoader(valset, batch_size=batch_size, shuffle=False, num_workers=2)
 
 
 #classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
@@ -62,10 +68,11 @@ print('==> Building model..')
 # net = ResNeXt29_2x64d()
 # net = MobileNet()
 # net = MobileNetV2()
-net = DPN92()
+#net = DPN92()
 # net = ShuffleNetG2()
 # net = SENet18()
 #net = ShuffleNetV2(1)
+net = BiRNN()
 net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)
@@ -75,7 +82,7 @@ if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('../checkpoint/ckpt.t7')
+    checkpoint = torch.load('checkpoint/BiRNN.t7')
     net.load_state_dict(checkpoint['net'])
     best_acc = checkpoint['acc']
     start_epoch = checkpoint['epoch']
@@ -105,6 +112,7 @@ def train(epoch):
 
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+    print(correct/total)
 
 def test(epoch):
     global best_acc
@@ -113,7 +121,7 @@ def test(epoch):
     correct = 0
     total = 0
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(testloader):
+        for batch_idx, (inputs, targets) in enumerate(valloader):
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = net(inputs)
             loss = criterion(outputs, targets)
@@ -123,13 +131,14 @@ def test(epoch):
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+            progress_bar(batch_idx, len(valloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                 % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
     # Save checkpoint.
     acc = 100.*correct/total
+    print(acc)
     if acc > best_acc:
-        print('Saving..  %f', acc)
+        print('Saving..  %f' % acc)
         state = {
             'net': net.state_dict(),
             'acc': acc,
@@ -137,23 +146,21 @@ def test(epoch):
         }
         #if not os.path.isdir('checkpoint'):
             #os.mkdir('checkpoint')
-        torch.save(state, '../checkpoint/ckpt.t7')
+        torch.save(state, 'checkpoint/BiRNN2.t7')
         best_acc = acc
 
 def predict():
-    testset = torchvision.datasets.ImageFolder(root='ts', transform=torchvision.transforms.ToTensor())
+    testset = ImageFolderWithPaths(root='ts', transform=torchvision.transforms.ToTensor())
     testloader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False, num_workers=2)
     net.eval()
-    correct = 0
-    total = 0
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(testloader):
+        for batch_idx, (inputs, targets, path) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
+            images = inputs.reshape(-1, 32, 32).to(device)
             outputs = net(inputs)
 
             _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
+            print(path[0].replace("\\0\\", "/") + ",{0:02d}".format(predicted.data.tolist()[0]))
 
 
 if __name__ == '__main__':
