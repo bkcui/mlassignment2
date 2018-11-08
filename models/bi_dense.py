@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 input_size = 32
 hidden_size = 128
-num_layers = 3
+num_layers = 2
 num_classes = 10
 batch_size = 16
 channel = 3
@@ -106,8 +106,8 @@ class DenseNet(nn.Module):
         self.bn = nn.BatchNorm2d(num_planes)
         #self.linear = nn.Linear(num_planes, num_classes)
         self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
-        self.linear1 = nn.Linear(hidden_size * 4 *32 , hidden_size * 8)
-        self.linear = nn.Linear(hidden_size * 8 + num_planes, num_classes)
+        self.linear1 = nn.Linear(hidden_size * 4 *32 , hidden_size )
+        self.linear = nn.Linear(hidden_size  + num_planes, num_classes)
 
     def _make_dense_layers(self, block, in_planes, nblock):
         layers = []
