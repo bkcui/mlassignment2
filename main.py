@@ -18,10 +18,6 @@ from utils import progress_bar
 from utils import ImageFolderWithPaths
 
 
-import sys
-sys.setrecursionlimit(100000)
-
-
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
@@ -72,7 +68,8 @@ print('==> Building model..')
 # net = ShuffleNetG2()
 # net = SENet18()
 #net = ShuffleNetV2(1)
-net = BiRNN()
+#net = BiRNN()
+net = DenseNet121()
 net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)
@@ -82,7 +79,7 @@ if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('checkpoint/BiRNN.t7')
+    checkpoint = torch.load('checkpoint/bidense.t7')
     net.load_state_dict(checkpoint['net'])
     best_acc = checkpoint['acc']
     start_epoch = checkpoint['epoch']
@@ -146,7 +143,7 @@ def test(epoch):
         }
         #if not os.path.isdir('checkpoint'):
             #os.mkdir('checkpoint')
-        torch.save(state, 'checkpoint/BiRNN2.t7')
+        torch.save(state, 'checkpoint/bidense.t7')
         best_acc = acc
 
 def predict():
@@ -161,6 +158,7 @@ def predict():
 
             _, predicted = outputs.max(1)
             print(path[0].replace("\\0\\", "/") + ",{0:02d}".format(predicted.data.tolist()[0]))
+
 
 
 if __name__ == '__main__':

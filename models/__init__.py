@@ -13,3 +13,4 @@ from models.preact_resnet import *
 from models.mobilenet import *
 from models.mobilenetv2 import *
 from models.birnn import *
+from models.bi_dense import *
