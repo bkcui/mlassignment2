@@ -107,7 +107,7 @@ class DenseNet(nn.Module):
         #self.linear = nn.Linear(num_planes, num_classes)
         self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
         self.linear1 = nn.Linear(hidden_size * 4 *32 , hidden_size )
-        self.linear = nn.Linear(hidden_size  + num_planes, num_classes)
+        self.linear = nn.Linear(hidden_size + num_planes, num_classes)
 
     def _make_dense_layers(self, block, in_planes, nblock):
         layers = []
