@@ -106,8 +106,8 @@ class DenseNet(nn.Module):
         self.bn = nn.BatchNorm2d(num_planes)
         #self.linear = nn.Linear(num_planes, num_classes)
         self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
-        self.linear1 = nn.Linear(hidden_size * 4 *32 , hidden_size )
-        self.linear = nn.Linear(hidden_size + num_planes, num_classes)
+        self.linear = nn.Linear(hidden_size * 4 * 32 , num_planes )
+        self.linear1 = nn.Linear(num_planes + num_planes, num_classes)
 
     def _make_dense_layers(self, block, in_planes, nblock):
         layers = []
@@ -125,6 +125,7 @@ class DenseNet(nn.Module):
         out = F.avg_pool2d(F.relu(self.bn(out)), 4)
         out = out.view(out.size(0), -1)
         out1 = self.birnn(x)
+        print(out1.size())
         out1 = self.linear(out1)
         out1 = F.relu(out1)
         out = self.linear1(torch.cat((out, out1), dim=1))
