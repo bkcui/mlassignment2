@@ -125,7 +125,6 @@ class DenseNet(nn.Module):
         out = F.avg_pool2d(F.relu(self.bn(out)), 4)
         out = out.view(out.size(0), -1)
         out1 = self.birnn(x)
-        print(out1.size())
         out1 = self.linear(out1)
         out1 = F.relu(out1)
         out = self.linear1(torch.cat((out, out1), dim=1))
