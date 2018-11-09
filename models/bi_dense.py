@@ -29,15 +29,11 @@ class BidirectRNN(nn.Module):
         h1 = torch.zeros(self.num_layers * 2, x.size(0), self.hidden_size).to(device)  # 2 for bidirection
         c1 = torch.zeros(self.num_layers * 2, x.size(0), self.hidden_size).to(device)
 
-        b = x.transpose(2, 3)
-        c = x.reshape(batch_size, -1, input_size)
-        c = c.transpose(1, 2)
-        d = b.reshape(batch_size, -1, input_size)
-        d = d.transpose(1, 2)
+        a = x.transpose(1, 2)
 
         # Forward propagate LSTM
-        out1, _ = self.lstm1(c, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size*2)
-        out2, _ = self.lstm2(d, (h1, c1))  # out: tensor of shape (batch_size, seq_length, hidden_size*2)
+        out1, _ = self.lstm1(x, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size*2)
+        out2, _ = self.lstm2(a, (h1, c1))  # out: tensor of shape (batch_size, seq_length, hidden_size*2)
 
         #print(torch.cat((out1, out2), dim=2)[:,-1,:].size())
         #print(torch.cat((out1, out2), dim=2)[:,:,:].size())
@@ -105,7 +101,7 @@ class DenseNet(nn.Module):
 
         self.bn = nn.BatchNorm2d(num_planes)
         #self.linear = nn.Linear(num_planes, num_classes)
-        self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
+        self.birnn = BidirectRNN(input_size, hidden_size, num_layers, num_classes)
         self.linear = nn.Linear(hidden_size * 4 * 32 , num_planes )
         self.linear1 = nn.Linear(num_planes + num_planes, num_classes)
 
@@ -124,29 +120,29 @@ class DenseNet(nn.Module):
         out = self.dense4(out)
         out = F.avg_pool2d(F.relu(self.bn(out)), 4)
         out = out.view(out.size(0), -1)
-        out1 = self.birnn(x)
+        out1 = self.birnn(torch.sum(x, dim=1))
         out1 = self.linear(out1)
         out1 = F.relu(out1)
         out = self.linear1(torch.cat((out, out1), dim=1))
         return out
 
-def DenseNet121():
+def bi_DenseNet121():
     return DenseNet(Bottleneck, [6,12,24,16], growth_rate=32)
 
-def DenseNet169():
+def bi_DenseNet169():
     return DenseNet(Bottleneck, [6,12,32,32], growth_rate=32)
 
-def DenseNet201():
+def bi_DenseNet201():
     return DenseNet(Bottleneck, [6,12,48,32], growth_rate=32)
 
-def DenseNet161():
+def bi_DenseNet161():
     return DenseNet(Bottleneck, [6,12,36,24], growth_rate=48)
 
-def densenet_cifar():
+def bi_densenet_cifar():
     return DenseNet(Bottleneck, [6,12,24,16], growth_rate=12)
 
 def test():
-    net = densenet_cifar()
+    net = bi_densenet_cifar()
     x = torch.randn(1,3,32,32)
     y = net(x)
     print(y)
