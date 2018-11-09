@@ -7,7 +7,7 @@ input_size = 32
 hidden_size = 128
 num_layers = 2
 num_classes = 10
-batch_size = 25
+batch_size = 50
 channel = 3
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
