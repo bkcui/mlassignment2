@@ -7,8 +7,8 @@ input_size = 32
 hidden_size = 128
 num_layers = 2
 num_classes = 10
-batch_size = 2
-seq_len = 5
+batch_size = 25
+seq_len = 3
 channel = 3
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -125,8 +125,8 @@ class DenseNet(nn.Module):
         #self.linear = nn.Linear(num_planes, num_classes)
         self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
         self.gru = gru(input_size*input_size*channel, hidden_size//8)
-        self.h0linear = nn.Linear(256 * 8 * 8 , hidden_size//4)
-        self.h1linear = nn.Linear(1024 * 4 * 4 , hidden_size//8)
+        self.h0linear = nn.Linear(384 * 4 * 4 , hidden_size//4)
+        self.h1linear = nn.Linear(96 * 8 * 8 , hidden_size//8)
         self.linear = nn.Linear(hidden_size * 4 * 32 , num_planes )
         self.linear1 = nn.Linear(seq_len  * hidden_size//8, hidden_size//8)
         self.linear2 = nn.Linear(num_planes + num_planes + hidden_size//8, num_classes)
@@ -172,7 +172,7 @@ def bi_densenet_cifar():
     return DenseNet(Bottleneck, [6,12,24,16], growth_rate=12)
 
 def test():
-    net = bi_DenseNet121().to(device)
+    net = bi_densenet_cifar().to(device)
     x = torch.randn(2,3,32,32).to(device)
     y = net(x)
     print(y)
