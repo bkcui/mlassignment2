@@ -150,7 +150,6 @@ class DenseNet(nn.Module):
         out = out.view(out.size(0), -1)
         out1 = self.birnn(x)
         out1 = self.linear(out1)
-        print(h0.size(), h1.size())
         out2 = self.gru(torch.cat([x.view(batch_size, 1, -1) for i in range(seq_len)], dim = 1).to(device), h0, h1)
         out2 = self.linear1(out2.reshape(batch_size, -1))
         out1 = F.relu(out1)
