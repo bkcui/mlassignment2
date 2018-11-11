@@ -60,8 +60,8 @@ class gru(nn.Module):
         out = x.view(batch_size, seq_len, -1)
         h00 = h0.view(batch_size, 1, -1)
         h11 = h1.view(batch_size, 1, -1)
-        out, _ = self.gru1(out, h00)  # out: tensor of shape (batch_size, seq_length, 96 * 8 * 8)
-        out, _ = self.gru2(out, h11)  # out: tensor of shape (batch_size, seq_length, 384 * 4 * 4)
+        out, _ = self.gru1(out, h00.transpose(0, 1))  # out: tensor of shape (batch_size, seq_length, 96 * 8 * 8)
+        out, _ = self.gru2(out, h11.transpose(0, 1))  # out: tensor of shape (batch_size, seq_length, 384 * 4 * 4)
 
         return out
 
@@ -149,7 +149,7 @@ class DenseNet(nn.Module):
         out1 = self.birnn(x)
         out1 = self.linear(out1)
         out2 = self.gru(torch.cat([x.view(batch_size, 1, -1) for i in range(seq_len)], dim = 1).to(device), h0, h1)
-        out2 = self.linear1(out2.view(batch_size, -1))
+        out2 = self.linear1(out2.reshape(batch_size, -1))
         out1 = F.relu(out1)
         out = self.linear2(torch.cat((out, out1, out2), dim=1))
         return out
@@ -171,8 +171,9 @@ def bi_densenet_cifar():
 
 def test():
     net = bi_densenet_cifar().to(device)
-    x = torch.randn(1,3,32,32).to(device)
+    x = torch.randn(2,3,32,32).to(device)
     y = net(x)
     print(y)
 
-test()
+if __name__ == "__main__":
+    test()
