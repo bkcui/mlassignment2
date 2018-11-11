@@ -4,10 +4,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 input_size = 32
-hidden_size = 128
+hidden_size = 84
 num_layers = 2
 num_classes = 10
-batch_size = 25
+batch_size = 10
 seq_len = 5
 channel = 3
 
