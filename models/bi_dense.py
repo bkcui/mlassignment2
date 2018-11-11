@@ -7,7 +7,7 @@ input_size = 32
 hidden_size = 128
 num_layers = 2
 num_classes = 10
-batch_size = 2
+batch_size = 25
 seq_len = 5
 channel = 3
 
