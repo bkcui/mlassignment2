@@ -7,7 +7,7 @@ input_size = 32
 hidden_size = 128
 num_layers = 2
 num_classes = 10
-batch_size = 25
+batch_size = 2
 seq_len = 5
 channel = 3
 
@@ -49,10 +49,10 @@ class BidirectRNN(nn.Module):
 
 
 class gru(nn.Module):
-    def __init__(self, input_size):
+    def __init__(self, input_size, hidden_size):
         super(gru, self).__init__()
-        self.gru1 = nn.GRU(input_size, 96 * 8 * 8, 1, batch_first=True, bidirectional=False)
-        self.gru2 = nn.GRU(96 * 8 * 8, 384 * 4 * 4, 1, batch_first=True, bidirectional=False)
+        self.gru1 = nn.GRU(input_size, hidden_size * 2, 1, batch_first=True, bidirectional=False)
+        self.gru2 = nn.GRU(hidden_size * 2, hidden_size, 1, batch_first=True, bidirectional=False)
         #self.fc = nn.Linear(hidden_size * 4, num_classes)  # 2 for bidirection
         #self.l1 = nn.Linear(hidden_size * 4 * 32, hidden_size * 4)
 
@@ -124,9 +124,11 @@ class DenseNet(nn.Module):
         self.bn = nn.BatchNorm2d(num_planes)
         #self.linear = nn.Linear(num_planes, num_classes)
         self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
-        self.gru = gru(input_size*input_size*channel)
+        self.gru = gru(input_size*input_size*channel, hidden_size)
+        self.h0linear = nn.Linear(256 * 8 * 8 , hidden_size * 2)
+        self.h1linear = nn.Linear(1024 * 4 * 4 , hidden_size)
         self.linear = nn.Linear(hidden_size * 4 * 32 , num_planes )
-        self.linear1 = nn.Linear(seq_len * 384 * 4 * 4 , num_planes)
+        self.linear1 = nn.Linear(seq_len  * hidden_size, num_planes)
         self.linear2 = nn.Linear(num_planes + num_planes + num_planes, num_classes)
 
     def _make_dense_layers(self, block, in_planes, nblock):
@@ -140,10 +142,10 @@ class DenseNet(nn.Module):
         out = self.conv1(x)
         out = self.trans1(self.dense1(out))
         out = self.trans2(self.dense2(out))
-        h0 = out
+        h0 = self.h0linear(out.view(batch_size, -1))
         out = self.trans3(self.dense3(out))
         out = self.dense4(out)
-        h1 = out
+        h1 = self.h1linear(out.view(batch_size, -1))
         out = F.avg_pool2d(F.relu(self.bn(out)), 4)
         out = out.view(out.size(0), -1)
         out1 = self.birnn(x)
