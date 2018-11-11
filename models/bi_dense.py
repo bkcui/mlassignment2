@@ -4,10 +4,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 input_size = 32
-hidden_size = 84
+hidden_size = 128
 num_layers = 2
 num_classes = 10
-batch_size = 10
+batch_size = 25
 seq_len = 5
 channel = 3
 
@@ -51,8 +51,8 @@ class BidirectRNN(nn.Module):
 class gru(nn.Module):
     def __init__(self, input_size):
         super(gru, self).__init__()
-        self.gru1 = nn.GRU(input_size, 256 * 8 * 8, 1, batch_first=True, bidirectional=False)
-        self.gru2 = nn.GRU(96 * 8 * 8, 1024 * 4 * 4, 1, batch_first=True, bidirectional=False)
+        self.gru1 = nn.GRU(input_size, 96 * 8 * 8, 1, batch_first=True, bidirectional=False)
+        self.gru2 = nn.GRU(96 * 8 * 8, 384 * 4 * 4, 1, batch_first=True, bidirectional=False)
         #self.fc = nn.Linear(hidden_size * 4, num_classes)  # 2 for bidirection
         #self.l1 = nn.Linear(hidden_size * 4 * 32, hidden_size * 4)
 
@@ -126,7 +126,7 @@ class DenseNet(nn.Module):
         self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
         self.gru = gru(input_size*input_size*channel)
         self.linear = nn.Linear(hidden_size * 4 * 32 , num_planes )
-        self.linear1 = nn.Linear(seq_len * 1024 * 4 * 4 , num_planes)
+        self.linear1 = nn.Linear(seq_len * 384 * 4 * 4 , num_planes)
         self.linear2 = nn.Linear(num_planes + num_planes + num_planes, num_classes)
 
     def _make_dense_layers(self, block, in_planes, nblock):
@@ -148,6 +148,7 @@ class DenseNet(nn.Module):
         out = out.view(out.size(0), -1)
         out1 = self.birnn(x)
         out1 = self.linear(out1)
+        print(h0.size(), h1.size())
         out2 = self.gru(torch.cat([x.view(batch_size, 1, -1) for i in range(seq_len)], dim = 1).to(device), h0, h1)
         out2 = self.linear1(out2.reshape(batch_size, -1))
         out1 = F.relu(out1)
