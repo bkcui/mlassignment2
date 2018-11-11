@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 input_size = 32
-hidden_size = 128
+hidden_size = 64
 num_layers = 2
 num_classes = 10
 batch_size = 25
@@ -127,9 +127,9 @@ class DenseNet(nn.Module):
         self.gru = gru(input_size*input_size*channel, hidden_size//8)
         self.h0linear = nn.Linear(384 * 4 * 4 , hidden_size//4)
         self.h1linear = nn.Linear(96 * 8 * 8 , hidden_size//8)
-        self.linear = nn.Linear(hidden_size * 4 * 32 , num_planes )
+        self.linear = nn.Linear(hidden_size * 4 * 32 , num_planes//2 )
         self.linear1 = nn.Linear(seq_len  * hidden_size//8, hidden_size//8)
-        self.linear2 = nn.Linear(num_planes + num_planes + hidden_size//8, num_classes)
+        self.linear2 = nn.Linear(num_planes + num_planes//2 + hidden_size//8, num_classes)
 
     def _make_dense_layers(self, block, in_planes, nblock):
         layers = []
@@ -142,18 +142,18 @@ class DenseNet(nn.Module):
         out = self.conv1(x)
         out = self.trans1(self.dense1(out))
         out = self.trans2(self.dense2(out))
-        h1 = self.h1linear(torch.tensor(out.view(batch_size, -1)).to(device))
+        h1 = self.h1linear(torch.tensor(out.view(batch_size, -1)).to(device))#
         out = self.trans3(self.dense3(out))
         out = self.dense4(out)
-        h0 = self.h0linear(torch.tensor(out.view(batch_size, -1)).to(device))
+        h0 = self.h0linear(torch.tensor(out.view(batch_size, -1)).to(device))#
         out = F.avg_pool2d(F.relu(self.bn(out)), 4)
         out = out.view(out.size(0), -1)
         out1 = self.birnn(x)
         out1 = self.linear(out1)
-        out2 = self.gru(torch.cat([x.view(batch_size, 1, -1) for i in range(seq_len)], dim = 1).to(device), h0, h1)
-        out2 = self.linear1(out2.reshape(batch_size, -1))
+        out2 = self.gru(torch.cat([x.view(batch_size, 1, -1) for i in range(seq_len)], dim = 1).to(device), h0, h1)#
+        out2 = self.linear1(out2.reshape(batch_size, -1))#
         out1 = F.relu(out1)
-        out = self.linear2(torch.cat((out, out1, out2), dim=1))
+        out = self.linear2(torch.cat((out, out1, out2), dim=1))#
         return out
 
 def bi_DenseNet121():
@@ -173,7 +173,7 @@ def bi_densenet_cifar():
 
 def test():
     net = bi_densenet_cifar().to(device)
-    x = torch.randn(2,3,32,32).to(device)
+    x = torch.randn(25,3,32,32).to(device)
     y = net(x)
     print(y)
 
