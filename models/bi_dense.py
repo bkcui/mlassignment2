@@ -51,8 +51,8 @@ class BidirectRNN(nn.Module):
 class gru(nn.Module):
     def __init__(self, input_size):
         super(gru, self).__init__()
-        self.gru1 = nn.GRU(input_size, 96 * 8 * 8, 1, batch_first=True, bidirectional=False)
-        self.gru2 = nn.GRU(96 * 8 * 8, 384 * 4 * 4, 1, batch_first=True, bidirectional=False)
+        self.gru1 = nn.GRU(input_size, 256 * 8 * 8, 1, batch_first=True, bidirectional=False)
+        self.gru2 = nn.GRU(96 * 8 * 8, 1024 * 4 * 4, 1, batch_first=True, bidirectional=False)
         #self.fc = nn.Linear(hidden_size * 4, num_classes)  # 2 for bidirection
         #self.l1 = nn.Linear(hidden_size * 4 * 32, hidden_size * 4)
 
@@ -126,7 +126,7 @@ class DenseNet(nn.Module):
         self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
         self.gru = gru(input_size*input_size*channel)
         self.linear = nn.Linear(hidden_size * 4 * 32 , num_planes )
-        self.linear1 = nn.Linear(seq_len * 384 * 4 * 4 , num_planes)
+        self.linear1 = nn.Linear(seq_len * 1024 * 4 * 4 , num_planes)
         self.linear2 = nn.Linear(num_planes + num_planes + num_planes, num_classes)
 
     def _make_dense_layers(self, block, in_planes, nblock):
@@ -170,7 +170,7 @@ def bi_densenet_cifar():
     return DenseNet(Bottleneck, [6,12,24,16], growth_rate=12)
 
 def test():
-    net = bi_densenet_cifar().to(device)
+    net = bi_DenseNet121().to(device)
     x = torch.randn(2,3,32,32).to(device)
     y = net(x)
     print(y)
