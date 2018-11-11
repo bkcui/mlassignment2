@@ -7,7 +7,7 @@ input_size = 32
 hidden_size = 128
 num_layers = 2
 num_classes = 10
-batch_size = 25
+batch_size = 2
 seq_len = 5
 channel = 3
 
@@ -142,10 +142,10 @@ class DenseNet(nn.Module):
         out = self.conv1(x)
         out = self.trans1(self.dense1(out))
         out = self.trans2(self.dense2(out))
-        h0 = self.h0linear(out.view(batch_size, -1))
+        h1 = self.h1linear(torch.tensor(out.view(batch_size, -1)).to(device))
         out = self.trans3(self.dense3(out))
         out = self.dense4(out)
-        h1 = self.h1linear(out.view(batch_size, -1))
+        h0 = self.h0linear(torch.tensor(out.view(batch_size, -1)).to(device))
         out = F.avg_pool2d(F.relu(self.bn(out)), 4)
         out = out.view(out.size(0), -1)
         out1 = self.birnn(x)
