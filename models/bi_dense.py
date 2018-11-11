@@ -124,12 +124,12 @@ class DenseNet(nn.Module):
         self.bn = nn.BatchNorm2d(num_planes)
         #self.linear = nn.Linear(num_planes, num_classes)
         self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
-        self.gru = gru(input_size*input_size*channel, hidden_size/8)
-        self.h0linear = nn.Linear(256 * 8 * 8 , hidden_size/4)
-        self.h1linear = nn.Linear(1024 * 4 * 4 , hidden_size/8)
+        self.gru = gru(input_size*input_size*channel, hidden_size//8)
+        self.h0linear = nn.Linear(256 * 8 * 8 , hidden_size//4)
+        self.h1linear = nn.Linear(1024 * 4 * 4 , hidden_size//8)
         self.linear = nn.Linear(hidden_size * 4 * 32 , num_planes )
-        self.linear1 = nn.Linear(seq_len  * hidden_size/8, hidden_size/8)
-        self.linear2 = nn.Linear(num_planes + num_planes + hidden_size/8, num_classes)
+        self.linear1 = nn.Linear(seq_len  * hidden_size//8, hidden_size//8)
+        self.linear2 = nn.Linear(num_planes + num_planes + hidden_size//8, num_classes)
 
     def _make_dense_layers(self, block, in_planes, nblock):
         layers = []
