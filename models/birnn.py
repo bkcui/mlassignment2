@@ -2,6 +2,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from util.graph_definition import *
 
 input_size = 32
 hidden_size = 128
@@ -48,6 +49,46 @@ class BidirectRNN(nn.Module):
         #out = self.fc(out1)[:,-1,:]
         return out
 
+class cellModule(nn.Module):
+
+    def __init__(self, cells, cells2, model):
+        super(cellModule, self).__init__()
+        self.model = model
+        self.rnn = cells
+        self.rnn2 = cells2
+        self.d1 = nn.Linear(hidden_size*2,hidden_size)
+        #self.d2 = nn.Linear()
+
+    def forward(self, x, hx=None):
+        b = x.transpose(2, 3)
+        c = x.reshape(batch_size, -1, input_size)
+        c = c.transpose(1, 2)
+        d = b.reshape(batch_size, -1, input_size)
+        d = d.transpose(1, 2)
+
+        if hx is not None:
+            output = self.rnn(c, hx)
+            output2 = self.rnn2(d, hx)
+        else:
+            output = self.rnn(c)
+            output2 = self.rnn2(d)
+
+
+        output, hx, updated_state = split_rnn_outputs(self.model, output)
+        output2, hx, updated_state = split_rnn_outputs(self.model, output2)
+        output = self.d1(torch.cat((output[:,-1,:], output2[:,-1,:]), dim=1)) # Get the last output of the sequence
+        return output, hx, updated_state
+
+def skip_bi_RNN():
+    cells = create_model(model='skip_lstm',
+                         input_size=input_size*channel,
+                         hidden_size=hidden_size,
+                         num_layers=2)
+    cells2 = create_model(model='skip_lstm',
+                         input_size=input_size*channel,
+                         hidden_size=hidden_size,
+                         num_layers=2)
+    return cellModule(cells, cells2, model='skip_lstm')
 
 def BiRNN():
     return BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
