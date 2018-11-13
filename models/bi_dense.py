@@ -16,10 +16,11 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 class BidirectRNN(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, num_classes):
         super(BidirectRNN, self).__init__()
+        self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.lstm1 = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, bidirectional=True)
-        self.lstm2 = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, bidirectional=True)
+        self.lstm1 = nn.LSTM(self.input_size, hidden_size, num_layers, batch_first=True, bidirectional=True, dropout=0.25)
+        self.lstm2 = nn.LSTM(self.input_size, hidden_size, num_layers, batch_first=True, bidirectional=True, dropout=0.25)
         #self.fc = nn.Linear(hidden_size * 4, num_classes)  # 2 for bidirection
         #self.l1 = nn.Linear(hidden_size * 4 * 32, hidden_size * 4)
 
@@ -31,10 +32,8 @@ class BidirectRNN(nn.Module):
         c1 = torch.zeros(self.num_layers * 2, x.size(0), self.hidden_size).to(device)
 
         b = x.transpose(2, 3)
-        c = x.reshape(batch_size, -1, input_size)
-        c = c.transpose(1, 2)
-        d = b.reshape(batch_size, -1, input_size)
-        d = d.transpose(1, 2)
+        c = x.reshape(batch_size, -1, self.input_size)
+        d = b.reshape(batch_size, -1, self.input_size)
 
         # Forward propagate LSTM
         out1, _ = self.lstm1(c, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size*2)
@@ -43,9 +42,9 @@ class BidirectRNN(nn.Module):
         #print(torch.cat((out1, out2), dim=2)[:,-1,:].size())
         #print(torch.cat((out1, out2), dim=2)[:,:,:].size())
         # Decode the hidden state of the last time step
-        out = torch.cat((out1, out2), dim=2).view(batch_size, -1) #out = hidden *4 *32
+        out = torch.cat((out1, out2), dim=2)
         #out = self.fc(out1)[:,-1,:]
-        return out
+        return out[:,-1,:].view(batch_size,-1)
 
 
 class gru(nn.Module):
@@ -112,11 +111,13 @@ class DenseNet(nn.Module):
         self.trans2 = Transition(num_planes, out_planes)
         num_planes = out_planes
 
+        '''
         self.dense3 = self._make_dense_layers(block, num_planes, nblocks[2])
         num_planes += nblocks[2]*growth_rate
         out_planes = int(math.floor(num_planes*reduction))
         self.trans3 = Transition(num_planes, out_planes)
         num_planes = out_planes
+        '''
 
         self.dense4 = self._make_dense_layers(block, num_planes, nblocks[3])
         num_planes += nblocks[3]*growth_rate
@@ -124,7 +125,9 @@ class DenseNet(nn.Module):
         self.bn = nn.BatchNorm2d(num_planes)
         #self.linear = nn.Linear(num_planes, num_classes)
         self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
-        self.linear = nn.Linear(hidden_size * 4 * 32 , num_planes )
+        self.birnn1 = BidirectRNN(24*32, hidden_size, num_layers, num_classes)
+        self.birnn2 = BidirectRNN(48*16, hidden_size, num_layers, num_classes)
+        self.linear = nn.Linear(hidden_size * 12, num_planes )
         self.linear2 = nn.Linear(num_planes + num_planes, num_classes)
 
     def _make_dense_layers(self, block, in_planes, nblock):
@@ -136,16 +139,19 @@ class DenseNet(nn.Module):
 
     def forward(self, x):
         out = self.conv1(x)
+        out1 = self.birnn1(out)
         out = self.trans1(self.dense1(out))
+        out2 = self.birnn2(out)
         out = self.trans2(self.dense2(out))
-        out = self.trans3(self.dense3(out))
+        #print(out.size())
+        #out = self.trans3(self.dense3(out))
         out = self.dense4(out)
-        out = F.avg_pool2d(F.relu(self.bn(out)), 4)
+        out = F.avg_pool2d(F.relu(self.bn(out)), 8)
         out = out.view(out.size(0), -1)
-        out1 = self.birnn(x)
-        out1 = self.linear(out1)
-        out1 = F.relu(out1)
-        out = self.linear2(torch.cat((out, out1), dim=1))#
+        out3 = self.birnn(x)
+        out3 = self.linear(torch.cat((out1, out2, out3), dim=1))
+        out3 = F.relu(out3)
+        out = self.linear2(torch.cat((out, out3), dim=1))#
         return out
 
 def bi_DenseNet121():

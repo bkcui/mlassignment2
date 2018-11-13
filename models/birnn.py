@@ -8,7 +8,7 @@ input_size = 32
 hidden_size = 128
 num_layers = 3
 num_classes = 10
-batch_size = 16
+batch_size = 25
 channel = 3
 
 
@@ -77,7 +77,7 @@ class cellModule(nn.Module):
         output, hx, updated_state = split_rnn_outputs(self.model, output)
         output2, hx, updated_state = split_rnn_outputs(self.model, output2)
         output = self.d1(torch.cat((output[:,-1,:], output2[:,-1,:]), dim=1)) # Get the last output of the sequence
-        return output, hx, updated_state
+        return output
 
 def skip_bi_RNN():
     cells = create_model(model='skip_lstm',
