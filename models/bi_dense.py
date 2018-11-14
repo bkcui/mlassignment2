@@ -35,6 +35,8 @@ class BidirectRNN(nn.Module):
         c = x.reshape(batch_size, -1, self.input_size)
         d = b.reshape(batch_size, -1, self.input_size)
 
+        #print(c.size(), d.size())
+
         # Forward propagate LSTM
         out1, _ = self.lstm1(c, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size*2)
         out2, _ = self.lstm2(d, (h1, c1))  # out: tensor of shape (batch_size, seq_length, hidden_size*2)
@@ -125,8 +127,8 @@ class DenseNet(nn.Module):
         self.bn = nn.BatchNorm2d(num_planes)
         #self.linear = nn.Linear(num_planes, num_classes)
         self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
-        self.birnn1 = BidirectRNN(24*32, hidden_size, num_layers, num_classes)
-        self.birnn2 = BidirectRNN(48*16, hidden_size, num_layers, num_classes)
+        self.birnn1 = BidirectRNN(64*32, hidden_size, num_layers, num_classes)
+        self.birnn2 = BidirectRNN(128*16, hidden_size, num_layers, num_classes)
         self.linear = nn.Linear(hidden_size * 3, num_planes )
         self.linear2 = nn.Linear(num_planes + num_planes, num_classes)
         self.linear3 = nn.Linear(hidden_size * 4 * 32, hidden_size)
