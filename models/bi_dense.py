@@ -5,9 +5,9 @@ import torch.nn.functional as F
 
 input_size = 32
 hidden_size = 128
-num_layers = 2
+num_layers = 3
 num_classes = 10
-batch_size = 25
+batch_size = 50
 seq_len = 3
 channel = 3
 
@@ -19,8 +19,8 @@ class BidirectRNN(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.lstm1 = nn.LSTM(self.input_size, hidden_size, num_layers, batch_first=True, bidirectional=True, dropout=0.25)
-        self.lstm2 = nn.LSTM(self.input_size, hidden_size, num_layers, batch_first=True, bidirectional=True, dropout=0.25)
+        self.lstm1 = nn.LSTM(self.input_size, hidden_size, num_layers, batch_first=True, bidirectional=True, dropout=0.5)
+        self.lstm2 = nn.LSTM(self.input_size, hidden_size, num_layers, batch_first=True, bidirectional=True, dropout=0.5)
         #self.fc = nn.Linear(hidden_size * 4, num_classes)  # 2 for bidirection
         #self.l1 = nn.Linear(hidden_size * 4 * 32, hidden_size * 4)
 
@@ -113,13 +113,13 @@ class DenseNet(nn.Module):
         self.trans2 = Transition(num_planes, out_planes)
         num_planes = out_planes
 
-        '''
+
         self.dense3 = self._make_dense_layers(block, num_planes, nblocks[2])
         num_planes += nblocks[2]*growth_rate
         out_planes = int(math.floor(num_planes*reduction))
         self.trans3 = Transition(num_planes, out_planes)
         num_planes = out_planes
-        '''
+
 
         self.dense4 = self._make_dense_layers(block, num_planes, nblocks[3])
         num_planes += nblocks[3]*growth_rate
@@ -133,7 +133,7 @@ class DenseNet(nn.Module):
         self.linear2 = nn.Linear(num_planes + num_planes, num_classes)
         self.linear3 = nn.Linear(hidden_size * 4 , hidden_size)
         self.linear4 = nn.Linear(hidden_size * 4 , hidden_size)
-        self.linear5 = nn.Linear(hidden_size * 4 , hidden_size)
+        self.linear5 = nn.Linear(hidden_size * 4 , num_planes)
 
     def _make_dense_layers(self, block, in_planes, nblock):
         layers = []
@@ -144,21 +144,21 @@ class DenseNet(nn.Module):
 
     def forward(self, x):
         out = self.conv1(x)
-        out1 = self.birnn1(out)
-        out1 = self.linear3(out1)
+        #out1 = self.birnn1(out)
+        #out1 = self.linear3(out1)
         out = self.trans1(self.dense1(out))
-        out2 = self.birnn2(out)
-        out2 = self.linear4(out2)
+        #out2 = self.birnn2(out)
+        #out2 = self.linear4(out2)
         out = self.trans2(self.dense2(out))
         #print(out.size())
-        #out = self.trans3(self.dense3(out))
+        out = self.trans3(self.dense3(out))
         out = self.dense4(out)
-        out = F.max_pool2d(F.relu(self.bn(out)), 8)
+        out = F.max_pool2d(F.relu(self.bn(out)), 4)
         out = out.view(out.size(0), -1)
         out3 = self.birnn(x)
         out3 = self.linear5(out3)
-        out3 = self.linear(torch.cat((out1, out2, out3), dim=1))
-        out3 = F.relu(out3)
+        #out3 = self.linear(torch.cat((out1, out2, out3), dim=1))
+        #out3 = F.relu(out3)
         out = self.linear2(torch.cat((out, out3), dim=1))#
         return out
 
