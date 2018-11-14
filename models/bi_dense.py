@@ -44,7 +44,7 @@ class BidirectRNN(nn.Module):
         # Decode the hidden state of the last time step
         out = torch.cat((out1, out2), dim=2)
         #out = self.fc(out1)[:,-1,:]
-        return out[:,-1,:].view(batch_size,-1)
+        return out.view(batch_size,-1)
 
 
 class gru(nn.Module):
@@ -87,7 +87,7 @@ class Transition(nn.Module):
 
     def forward(self, x):
         out = self.conv(F.relu(self.bn(x)))
-        out = F.avg_pool2d(out, 2)
+        out = F.max_pool2d(out, 2)
         return out
 
 
@@ -127,8 +127,11 @@ class DenseNet(nn.Module):
         self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
         self.birnn1 = BidirectRNN(24*32, hidden_size, num_layers, num_classes)
         self.birnn2 = BidirectRNN(48*16, hidden_size, num_layers, num_classes)
-        self.linear = nn.Linear(hidden_size * 12, num_planes )
+        self.linear = nn.Linear(hidden_size * 3, num_planes )
         self.linear2 = nn.Linear(num_planes + num_planes, num_classes)
+        self.linear3 = nn.Linear(hidden_size * 4 * 32, hidden_size)
+        self.linear4 = nn.Linear(hidden_size * 4 * 16, hidden_size)
+        self.linear5 = nn.Linear(hidden_size * 4 * 32, hidden_size)
 
     def _make_dense_layers(self, block, in_planes, nblock):
         layers = []
@@ -140,15 +143,18 @@ class DenseNet(nn.Module):
     def forward(self, x):
         out = self.conv1(x)
         out1 = self.birnn1(out)
+        out1 = self.linear3(out1)
         out = self.trans1(self.dense1(out))
         out2 = self.birnn2(out)
+        out2 = self.linear4(out2)
         out = self.trans2(self.dense2(out))
         #print(out.size())
         #out = self.trans3(self.dense3(out))
         out = self.dense4(out)
-        out = F.avg_pool2d(F.relu(self.bn(out)), 8)
+        out = F.max_pool2d(F.relu(self.bn(out)), 8)
         out = out.view(out.size(0), -1)
         out3 = self.birnn(x)
+        out3 = self.linear5(out3)
         out3 = self.linear(torch.cat((out1, out2, out3), dim=1))
         out3 = F.relu(out3)
         out = self.linear2(torch.cat((out, out3), dim=1))#
