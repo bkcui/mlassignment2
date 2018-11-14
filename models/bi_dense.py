@@ -14,8 +14,9 @@ channel = 3
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class BidirectRNN(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, num_classes):
+    def __init__(self, input_size, hidden_size, num_layers, num_classes, batch_size):
         super(BidirectRNN, self).__init__()
+        self.batch_size = batch_size
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
@@ -32,8 +33,8 @@ class BidirectRNN(nn.Module):
         c1 = torch.zeros(self.num_layers * 2, x.size(0), self.hidden_size).to(device)
 
         b = x.transpose(2, 3)
-        c = x.reshape(batch_size, -1, self.input_size)
-        d = b.reshape(batch_size, -1, self.input_size)
+        c = x.reshape(self.batch_size, -1, self.input_size)
+        d = b.reshape(self.batch_size, -1, self.input_size)
 
         #print(c.size(), d.size())
 
@@ -46,7 +47,7 @@ class BidirectRNN(nn.Module):
         # Decode the hidden state of the last time step
         out = torch.cat((out1, out2), dim=2)
         #out = self.fc(out1)[:,-1,:]
-        return out[:,-1,:].view(batch_size,-1)
+        return out[:,-1,:].view(self.batch_size,-1)
 
 
 class gru(nn.Module):
@@ -94,7 +95,7 @@ class Transition(nn.Module):
 
 
 class DenseNet(nn.Module):
-    def __init__(self, block, nblocks, growth_rate=12, reduction=0.5, num_classes=10):
+    def __init__(self, block, nblocks, batch_size, growth_rate=12, reduction=0.5, num_classes=10):
         super(DenseNet, self).__init__()
         self.growth_rate = growth_rate
 
@@ -126,9 +127,9 @@ class DenseNet(nn.Module):
 
         self.bn = nn.BatchNorm2d(num_planes)
         #self.linear = nn.Linear(num_planes, num_classes)
-        self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes)
-        self.birnn1 = BidirectRNN(64*32, hidden_size, num_layers, num_classes)
-        self.birnn2 = BidirectRNN(128*16, hidden_size, num_layers, num_classes)
+        self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes, batch_size)
+        self.birnn1 = BidirectRNN(64*32, hidden_size, num_layers, num_classes, batch_size)
+        self.birnn2 = BidirectRNN(128*16, hidden_size, num_layers, num_classes, batch_size)
         self.linear = nn.Linear(hidden_size * 3, num_planes )
         self.linear2 = nn.Linear(num_planes + num_planes, num_classes)
         self.linear3 = nn.Linear(hidden_size * 4 , hidden_size)
@@ -162,23 +163,23 @@ class DenseNet(nn.Module):
         out = self.linear2(torch.cat((out, out3), dim=1))#
         return out
 
-def bi_DenseNet121():
-    return DenseNet(Bottleneck, [6,12,24,16], growth_rate=32)
+def bi_DenseNet121(batch_size = batch_size):
+    return DenseNet(Bottleneck, [6,12,24,16], batch_size, growth_rate=32)
 
 def bi_DenseNet169():
-    return DenseNet(Bottleneck, [6,12,32,32], growth_rate=32)
+    return DenseNet(Bottleneck, [6,12,32,32], batch_size, growth_rate=32)
 
 def bi_DenseNet201():
-    return DenseNet(Bottleneck, [6,12,48,32], growth_rate=32)
+    return DenseNet(Bottleneck, [6,12,48,32], batch_size, growth_rate=32)
 
 def bi_DenseNet161():
-    return DenseNet(Bottleneck, [6,12,36,24], growth_rate=48)
+    return DenseNet(Bottleneck, [6,12,36,24], batch_size, growth_rate=48)
 
 def bi_densenet_cifar():
-    return DenseNet(Bottleneck, [6,12,24,16], growth_rate=12)
+    return DenseNet(Bottleneck, [6,12,24,16], batch_size, growth_rate=12)
 
 def assem():
-    return DenseNet(Bottleneck, [6,12,24,16], growth_rate=12)
+    return DenseNet(Bottleneck, [6,12,24,16], batch_size, growth_rate=12)
 
 def test():
     net = bi_densenet_cifar().to(device)
