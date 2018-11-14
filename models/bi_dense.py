@@ -128,12 +128,12 @@ class DenseNet(nn.Module):
         self.bn = nn.BatchNorm2d(num_planes)
         #self.linear = nn.Linear(num_planes, num_classes)
         self.birnn = BidirectRNN(input_size * channel, hidden_size, num_layers, num_classes, batch_size)
-        self.birnn1 = BidirectRNN(64*32, hidden_size, num_layers, num_classes, batch_size)
-        self.birnn2 = BidirectRNN(128*16, hidden_size, num_layers, num_classes, batch_size)
+        #self.birnn1 = BidirectRNN(64*32, hidden_size, num_layers, num_classes, batch_size)
+        #self.birnn2 = BidirectRNN(128*16, hidden_size, num_layers, num_classes, batch_size)
         self.linear = nn.Linear(hidden_size * 3, num_planes )
         self.linear2 = nn.Linear(num_planes + num_planes, num_classes)
-        self.linear3 = nn.Linear(hidden_size * 4 , hidden_size)
-        self.linear4 = nn.Linear(hidden_size * 4 , hidden_size)
+        #self.linear3 = nn.Linear(hidden_size * 4 , hidden_size)
+        #self.linear4 = nn.Linear(hidden_size * 4 , hidden_size)
         self.linear5 = nn.Linear(hidden_size * 4 , num_planes)
 
     def _make_dense_layers(self, block, in_planes, nblock):
@@ -166,20 +166,17 @@ class DenseNet(nn.Module):
 def bi_DenseNet121(batch_size = batch_size, hidden_size = hidden_size, num_layers = num_layers):
     return DenseNet(Bottleneck, [6,12,24,16], batch_size, hidden_size, num_layers, growth_rate=32)
 
-def bi_DenseNet169(batch_size = batch_size, hidden_size = hidden_size):
+def bi_DenseNet169(batch_size = batch_size, hidden_size = hidden_size, num_layers = num_layers):
     return DenseNet(Bottleneck, [6,12,32,32], batch_size, hidden_size, num_layers, growth_rate=32)
 
-def bi_DenseNet201(batch_size = batch_size, hidden_size = hidden_size):
+def bi_DenseNet201(batch_size = batch_size, hidden_size = hidden_size, num_layers = num_layers):
     return DenseNet(Bottleneck, [6,12,48,32], batch_size, hidden_size, num_layers, growth_rate=32)
 
-def bi_DenseNet161(batch_size = batch_size, hidden_size = hidden_size):
+def bi_DenseNet161(batch_size = batch_size, hidden_size = hidden_size, num_layers = num_layers):
     return DenseNet(Bottleneck, [6,12,36,24], batch_size, hidden_size, num_layers, growth_rate=48)
 
-def bi_densenet_cifar(batch_size = batch_size, hidden_size = hidden_size):
+def bi_densenet_cifar(batch_size = batch_size, hidden_size = hidden_size, num_layers = num_layers):
     return DenseNet(Bottleneck, [6,12,24,16], batch_size, hidden_size, num_layers, growth_rate=12)
-
-def assem():
-    return DenseNet(Bottleneck, [6,12,24,16], batch_size, growth_rate=12)
 
 def test():
     net = bi_densenet_cifar().to(device)
