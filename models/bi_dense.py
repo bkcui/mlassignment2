@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 input_size = 32
 hidden_size = 128
-num_layers = 1
+num_layers = 2
 num_classes = 10
 batch_size = 25
 seq_len = 3
@@ -46,7 +46,7 @@ class BidirectRNN(nn.Module):
         # Decode the hidden state of the last time step
         out = torch.cat((out1, out2), dim=2)
         #out = self.fc(out1)[:,-1,:]
-        return out.view(batch_size,-1)
+        return out[:,-1,:].view(batch_size,-1)
 
 
 class gru(nn.Module):
@@ -131,9 +131,9 @@ class DenseNet(nn.Module):
         self.birnn2 = BidirectRNN(128*16, hidden_size, num_layers, num_classes)
         self.linear = nn.Linear(hidden_size * 3, num_planes )
         self.linear2 = nn.Linear(num_planes + num_planes, num_classes)
-        self.linear3 = nn.Linear(hidden_size * 4 * 32, hidden_size)
-        self.linear4 = nn.Linear(hidden_size * 4 * 16, hidden_size)
-        self.linear5 = nn.Linear(hidden_size * 4 * 32, hidden_size)
+        self.linear3 = nn.Linear(hidden_size * 4 , hidden_size)
+        self.linear4 = nn.Linear(hidden_size * 4 , hidden_size)
+        self.linear5 = nn.Linear(hidden_size * 4 , hidden_size)
 
     def _make_dense_layers(self, block, in_planes, nblock):
         layers = []
