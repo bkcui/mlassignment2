@@ -4,8 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 input_size = 32
-hidden_size = 128
-num_layers = 3
+hidden_size = 512
+num_layers = 5
 num_classes = 10
 batch_size = 50
 seq_len = 3
@@ -95,7 +95,7 @@ class Transition(nn.Module):
 
 
 class DenseNet(nn.Module):
-    def __init__(self, block, nblocks, batch_size, hidden_size, growth_rate=12, reduction=0.5, num_classes=10):
+    def __init__(self, block, nblocks, batch_size, hidden_size, num_layers, growth_rate=12, reduction=0.5, num_classes=10):
         super(DenseNet, self).__init__()
         self.growth_rate = growth_rate
 
@@ -163,20 +163,20 @@ class DenseNet(nn.Module):
         out = self.linear2(torch.cat((out, out3), dim=1))#
         return out
 
-def bi_DenseNet121(batch_size = batch_size, hidden_size = hidden_size):
-    return DenseNet(Bottleneck, [6,12,24,16], batch_size, hidden_size, growth_rate=32)
+def bi_DenseNet121(batch_size = batch_size, hidden_size = hidden_size, num_layers = num_layers):
+    return DenseNet(Bottleneck, [6,12,24,16], batch_size, hidden_size, num_layers, growth_rate=32)
 
 def bi_DenseNet169(batch_size = batch_size, hidden_size = hidden_size):
-    return DenseNet(Bottleneck, [6,12,32,32], batch_size, hidden_size, growth_rate=32)
+    return DenseNet(Bottleneck, [6,12,32,32], batch_size, hidden_size, num_layers, growth_rate=32)
 
 def bi_DenseNet201(batch_size = batch_size, hidden_size = hidden_size):
-    return DenseNet(Bottleneck, [6,12,48,32], batch_size, hidden_size, growth_rate=32)
+    return DenseNet(Bottleneck, [6,12,48,32], batch_size, hidden_size, num_layers, growth_rate=32)
 
 def bi_DenseNet161(batch_size = batch_size, hidden_size = hidden_size):
-    return DenseNet(Bottleneck, [6,12,36,24], batch_size, hidden_size, growth_rate=48)
+    return DenseNet(Bottleneck, [6,12,36,24], batch_size, hidden_size, num_layers, growth_rate=48)
 
 def bi_densenet_cifar(batch_size = batch_size, hidden_size = hidden_size):
-    return DenseNet(Bottleneck, [6,12,24,16], batch_size, hidden_size, growth_rate=12)
+    return DenseNet(Bottleneck, [6,12,24,16], batch_size, hidden_size, num_layers, growth_rate=12)
 
 def assem():
     return DenseNet(Bottleneck, [6,12,24,16], batch_size, growth_rate=12)
