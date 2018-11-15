@@ -26,8 +26,8 @@ model_config = OrderedDict([
     ('depth', 26),
     ('base_channels', 32),
     ('shake_forward', True),
-    ('shake_backward', args.shake_backward),
-    ('shake_image', args.shake_image),
+    ('shake_backward', True),
+    ('shake_image', True),
     ('input_shape', (50, 3, 32, 32)),
     ('n_classes', 10),
 ])
@@ -172,7 +172,7 @@ class shake_shake(nn.Module):
         # compute conv feature size
         with torch.no_grad():
             self.feature_size = self._forward_conv(
-                torch.zeros(*input_shape)).view(-1).shape[0]
+                torch.zeros(*input_shape)).view(input_shape[0], -1).shape[1]
 
         self.fc = nn.Linear(self.feature_size, n_classes)
 
@@ -218,4 +218,4 @@ class shake_shake(nn.Module):
 
 
 def shake_net():
-    return shake_shake(model_config).cuda()
+    return shake_shake(model_config)
