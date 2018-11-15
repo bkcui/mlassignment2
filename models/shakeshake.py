@@ -23,7 +23,7 @@ def str2bool(s):
 
 model_config = OrderedDict([
     ('arch', 'shake_shake'),
-    ('depth', 40),
+    ('depth', 38),
     ('base_channels', 50),
     ('shake_forward', True),
     ('shake_backward', True),

@@ -60,9 +60,9 @@ classes = ('cup', 'coffee', 'bed', 'tree', 'bird', 'chair', 'tea', 'bread', 'bic
 # Model
 print('==> Building model..')
 # net = VGG('VGG19')
-# net = ResNet18()
+net1 = ResNet18()
 # net = PreActResNet18()
-#net = GoogLeNet()
+net2 = GoogLeNet()
 # net = DenseNet121()
 # net = ResNeXt29_2x64d()
 # net = MobileNet()
@@ -72,11 +72,17 @@ print('==> Building model..')
 # net = SENet18()
 #net = ShuffleNetV2(1)
 #net = BiRNN()
-#net = bi_DenseNet121()
-net = shake_net()
-net = net.to(device)
+net3 = bi_DenseNet121()
+net4 = shake_net()
+net1 = net1.to(device)
+net2 = net2.to(device)
+net3 = net3.to(device)
+net4 = net4.to(device)
 if device == 'cuda':
-    net = torch.nn.DataParallel(net)
+    net = torch.nn.DataParallel(net1)
+    net = torch.nn.DataParallel(net2)
+    net = torch.nn.DataParallel(net3)
+    net = torch.nn.DataParallel(net4)
     cudnn.benchmark = True
 
 if args.resume:
