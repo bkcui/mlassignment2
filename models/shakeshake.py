@@ -20,77 +20,18 @@ def str2bool(s):
     else:
         raise RuntimeError('Boolean value expected')
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    # model config
-    parser.add_argument('--depth', type=int, required=False)
-    parser.add_argument('--base_channels', type=int, required=False)
 
-    parser.add_argument('--shake_forward', type=str2bool, default=True)
-    parser.add_argument('--shake_backward', type=str2bool, default=True)
-    parser.add_argument('--shake_image', type=str2bool, default=True)
+model_config = OrderedDict([
+    ('arch', 'shake_shake'),
+    ('depth', 26),
+    ('base_channels', 32),
+    ('shake_forward', True),
+    ('shake_backward', args.shake_backward),
+    ('shake_image', args.shake_image),
+    ('input_shape', (50, 3, 32, 32)),
+    ('n_classes', 10),
+])
 
-    # run config
-    parser.add_argument('--outdir', type=str, required=False)
-    parser.add_argument('--seed', type=int, default=17)
-    parser.add_argument('--num_workers', type=int, default=7)
-
-    # optim config
-    parser.add_argument('--epochs', type=int, default=1800)
-    parser.add_argument('--batch_size', type=int, default=128)
-    parser.add_argument('--base_lr', type=float, default=0.2)
-    parser.add_argument('--weight_decay', type=float, default=1e-4)
-    parser.add_argument('--momentum', type=float, default=0.9)
-    parser.add_argument('--nesterov', type=str2bool, default=True)
-    parser.add_argument('--lr_min', type=float, default=0)
-
-    # TensorBoard
-    parser.add_argument(
-        '--tensorboard', dest='tensorboard', action='store_true')
-
-    args = parser.parse_args()
-    args.tensorboard = False
-
-    model_config = OrderedDict([
-        ('arch', 'shake_shake'),
-        ('depth', 26),
-        ('base_channels', 32),
-        ('shake_forward', True),
-        ('shake_backward', args.shake_backward),
-        ('shake_image', args.shake_image),
-        ('input_shape', (50, 3, 32, 32)),
-        ('n_classes', 10),
-    ])
-
-    optim_config = OrderedDict([
-        ('epochs', args.epochs),
-        ('batch_size', args.batch_size),
-        ('base_lr', args.base_lr),
-        ('weight_decay', args.weight_decay),
-        ('momentum', args.momentum),
-        ('nesterov', args.nesterov),
-        ('lr_min', args.lr_min),
-    ])
-
-    data_config = OrderedDict([
-        ('dataset', 'CIFAR10'),
-    ])
-
-    run_config = OrderedDict([
-        ('seed', args.seed),
-        ('outdir', 'result'),
-        ('num_workers', args.num_workers),
-        ('tensorboard', args.tensorboard),
-    ])
-
-    config = OrderedDict([
-        ('model_config', model_config),
-        ('optim_config', optim_config),
-        ('data_config', data_config),
-        ('run_config', run_config),
-    ])
-
-    return config
 
 def initialize_weights(module):
     if isinstance(module, nn.Conv2d):
@@ -277,5 +218,4 @@ class shake_shake(nn.Module):
 
 
 def shake_net():
-    config = parse_args()
-    return shake_shake(config['model_config'])
+    return shake_shake(model_config).cuda()
