@@ -74,10 +74,10 @@ net1 = net1.to(device)
 net2 = net2.to(device)
 net3 = net3.to(device)
 net4 = net4.to(device)
-checkpoint = torch.load('checkpoint/bidense3.t7')
-net.load_state_dict(checkpoint['net'])
-best_acc = checkpoint['acc']
-start_epoch = checkpoint['epoch']
+#checkpoint = torch.load('checkpoint/bidense3.t7')
+#net.load_state_dict(checkpoint['net'])
+#best_acc = checkpoint['acc']
+#start_epoch = checkpoint['epoch']
 
 
 if device == 'cuda':
@@ -90,11 +90,26 @@ if device == 'cuda':
 if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
-    assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('checkpoint/bidense3.t7')
-    net.load_state_dict(checkpoint['net'])
+    checkpoint = torch.load('/content/gdrive/My Drive/Colab Notebooks/ResNet18.t7')
+    net1.load_state_dict(checkpoint['net'])
     best_acc = checkpoint['acc']
     start_epoch = checkpoint['epoch']
+    print('net 1 acc :', best_acc, 'epoch :', start_epoch)
+    checkpoint = torch.load('/content/gdrive/My Drive/Colab Notebooks/GoogLeNet.t7')
+    net2.load_state_dict(checkpoint['net'])
+    best_acc = checkpoint['acc']
+    start_epoch = checkpoint['epoch']
+    print('net 2 acc :', best_acc, 'epoch :', start_epoch)
+    checkpoint = torch.load('/content/gdrive/My Drive/Colab Notebooks/bidense2.t7')
+    net3.load_state_dict(checkpoint['net'])
+    best_acc = checkpoint['acc']
+    start_epoch = checkpoint['epoch']
+    print('net 3 acc :', best_acc, 'epoch :', start_epoch)
+    checkpoint = torch.load('/content/gdrive/My Drive/Colab Notebooks/shake.t7')
+    net4.load_state_dict(checkpoint['net'])
+    best_acc = checkpoint['acc']
+    start_epoch = checkpoint['epoch']
+    print('net 4 acc :', best_acc, 'epoch :', start_epoch)
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
